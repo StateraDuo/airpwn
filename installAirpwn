@@ -1,0 +1,14 @@
+#!/bin/bash
+
+sudo apt-get install xterm macchanger mdk3 airmon-ng airodump-ng aireplay-ng airbase-ng
+if [ -z "`cat ~/.bash_aliases | grep airpwn=`" ]
+then
+	sudo echo "`pwd`" > /root/airPath
+	sudo echo "alias airpwn='`pwd`/airpwn'" >> ~/.bash_aliases
+	echo "airpwn command set, open new window to use"
+	sleep 1
+	exit
+else
+	sudo cat ~/.bash_aliases
+	echo -e "\e[0;33mIs airpwn already a command?\e[m"
+fi

