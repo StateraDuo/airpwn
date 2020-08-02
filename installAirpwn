@@ -1,14 +1,31 @@
 #!/bin/bash
 
-sudo apt-get install xterm macchanger mdk3 airmon-ng airodump-ng aireplay-ng airbase-ng
-if [ -z "`cat ~/.bash_aliases | grep airpwn=`" ]
+wait=0
+
+sudo apt-get install xterm macchanger mdk3 airmon-ng airodump-ng aireplay-ng airbase-ng 2>/dev/null
+if [ -z "`cat ~/.bashrc | grep airpwn`" ]
 then
 	sudo echo "`pwd`" > /root/airPath
-	sudo echo "alias airpwn='`pwd`/airpwn'" >> ~/.bash_aliases
-	echo "airpwn command set, open new window to use"
-	sleep 1
-	exit
+	sudo echo "alias airpwn='`pwd`/airpwn'" >> ~/.bashrc
+        echo -e "\e[0;34mairpwn command set in ~/.bashrc, open new window to use\e[m"
+	wait=1
+else
+        sudo cat ~/.bashrc
+        echo -e "\e[0;33mairpwn is already a command in ~/.bashrc (Try opening a new window to use)\e[m"
+fi
+
+if [ -z "`cat ~/.bash_aliases | grep airpwn`" ]
+then
+        sudo echo "`pwd`" > /root/airPath
+        sudo echo "alias airpwn='`pwd`/airpwn'" >> ~/.bash_aliases
+        echo -e "\e[0;34mairpwn command set in ~/.bash_aliases, open new window to use\e[m"
+	wait=1
 else
 	sudo cat ~/.bash_aliases
-	echo -e "\e[0;33mIs airpwn already a command?\e[m"
+	echo -e "\e[0;33mairpwn is already a command in ~/.bash_aliases (Try opening a new window to use)\e[m"
+fi
+
+if [ $wait == 1  ]
+then
+	sleep 5
 fi

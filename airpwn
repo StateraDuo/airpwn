@@ -54,7 +54,7 @@ then
 echo "Empty command, try again"
 sleep 1.5
 AtkMenu
-elif [ ! -z `echo $atkmeth | grep "[1-6]+" -E`]
+elif [ ! -z "`echo $atkmeth | grep "[1-6]+" -E`" ]
 then
 Attack
 else
